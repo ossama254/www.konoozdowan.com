@@ -47,8 +47,11 @@ export const CartDrawer: React.FC = () => {
   const freeShippingProgress =
     freeShippingThreshold <= 0 ? 100 : Math.min(100, (subtotal / freeShippingThreshold) * 100);
   const unusedVouchers = redeemedVouchers.filter((v) => !v.used);
+  const activeDomesticZones = domesticZones.filter((z) => z.active !== false);
+  const resolvedDomesticZones =
+    activeDomesticZones.length > 0 ? activeDomesticZones : domesticZones;
   const activeDomesticZone =
-    domesticZones.find((z) => z.id === domesticZone) ?? domesticZones[0];
+    resolvedDomesticZones.find((z) => z.id === domesticZone) ?? resolvedDomesticZones[0];
   const activeCountry =
     internationalCountries.find((c) => c.id === internationalCountry) ?? internationalCountries[0];
   const resolvedCountryLabel =
@@ -76,10 +79,10 @@ export const CartDrawer: React.FC = () => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-[#FFFBEB] h-full flex flex-col border-s border-[#E5DEC9] shadow-2xl"
+        className="w-full sm:max-w-md bg-[#FFFBEB] h-[100dvh] flex flex-col border-s border-[#E5DEC9] shadow-2xl"
       >
         {/* Header */}
-        <div className="px-5 py-4 bg-white border-b border-[#E5DEC9] flex items-center justify-between">
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 bg-white border-b border-[#E5DEC9] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <ShoppingBag className="w-5 h-5 text-[#D97706]" />
             <h2 className="text-base font-bold text-[#1F2937]">
@@ -131,24 +134,26 @@ export const CartDrawer: React.FC = () => {
 
             {shippingScope === 'domestic' ? (
               <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-1.5 text-xs">
-                  {domesticZones.map((zone) => (
-                    <button
-                      key={zone.id}
-                      type="button"
-                      onClick={() => setDomesticZone(zone.id)}
-                      className={`min-h-[34px] px-2.5 rounded-lg border font-semibold flex items-center justify-between gap-1 transition-colors ${
-                        domesticZone === zone.id
-                          ? 'border-[#D97706] bg-white text-[#1F2937] shadow-sm'
-                          : 'border-[#E5DEC9] bg-white/50 text-[#1F2937]/70 hover:bg-white'
-                      }`}
-                    >
-                      <span className="truncate">{t(zone.name)}</span>
-                      <span className="text-[#D97706] tabular-nums shrink-0">
-                        {formatPrice(zone.fee)}
-                      </span>
-                    </button>
-                  ))}
+                <div className="max-h-32 overflow-y-auto space-y-1.5 pe-0.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                    {resolvedDomesticZones.map((zone) => (
+                      <button
+                        key={zone.id}
+                        type="button"
+                        onClick={() => setDomesticZone(zone.id)}
+                        className={`min-h-[34px] px-2.5 py-1 rounded-lg border font-semibold flex items-center justify-between gap-1.5 text-start transition-colors ${
+                          domesticZone === zone.id
+                            ? 'border-[#D97706] bg-white text-[#1F2937] shadow-sm'
+                            : 'border-[#E5DEC9] bg-white/50 text-[#1F2937]/70 hover:bg-white'
+                        }`}
+                      >
+                        <span className="truncate">{t(zone.name)}</span>
+                        <span className="text-[#D97706] tabular-nums shrink-0">
+                          {formatPrice(zone.fee)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -378,7 +383,7 @@ export const CartDrawer: React.FC = () => {
 
         {/* Footer Totals */}
         {cart.length > 0 && (
-          <div className="p-5 bg-white border-t border-[#E5DEC9] space-y-4">
+          <div className="p-4 sm:p-5 bg-white border-t border-[#E5DEC9] space-y-3 sm:space-y-4 shrink-0">
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between text-[#1F2937]/75">
                 <span>{lang === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>

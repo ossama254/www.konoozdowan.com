@@ -53,7 +53,7 @@ const AppShell: React.FC = () => {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFFBEB] text-[#1F2937] pb-20 md:pb-0">
+    <div className="min-h-screen flex flex-col bg-[#FFFBEB] text-[#1F2937] pb-20 lg:pb-0 overflow-x-hidden">
       {/* Google Maps Demo Key Quota Exceeded Banner */}
       {mapsQuotaExceeded && (
         <div
@@ -75,27 +75,27 @@ const AppShell: React.FC = () => {
         </div>
       )}
 
-      {/* Top Navigation Bar — 3-Zone Contract */}
+      {/* Top Navigation Bar — Responsive 3-Zone Contract */}
       <header className="sticky top-0 z-40 bg-[#FFFBEB]/95 backdrop-blur-md border-b border-[#E5DEC9]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 md:h-16 flex items-center justify-between gap-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
           {/* Zone 1: Brand Wordmark & Logo */}
           <button
             type="button"
             onClick={() => setView('home')}
-            className="inline-flex items-center gap-2.5 text-lg sm:text-xl font-bold tracking-tight text-[#1F2937] hover:text-[#D97706] transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-2 sm:gap-2.5 text-base sm:text-xl font-bold tracking-tight text-[#1F2937] hover:text-[#D97706] transition-colors whitespace-nowrap shrink-0"
           >
             <img
               src="/assets/aistudio/_______________2027_____2__-_Copy_de345892.jpg"
               alt={lang === 'ar' ? 'شعار كنوز دوعن' : 'Kunooz Doan Logo'}
-              className="w-10 h-10 object-contain mix-blend-multiply shrink-0"
+              className="w-8 h-8 sm:w-10 sm:h-10 object-contain mix-blend-multiply shrink-0"
             />
             <span>{lang === 'ar' ? 'كنوز دوعن' : 'Kunooz Doan'}</span>
           </button>
 
-          {/* Zone 2: Concise single-line navigation links */}
+          {/* Zone 2: Concise single-line navigation links (lg+ desktop) */}
           <nav
             aria-label={lang === 'ar' ? 'التنقل الرئيسي' : 'Primary Navigation'}
-            className="hidden md:flex items-center gap-4 lg:gap-5 text-sm font-medium text-[#1F2937]/75"
+            className="hidden lg:flex items-center gap-5 text-sm font-medium text-[#1F2937]/75"
           >
             <button
               type="button"
@@ -159,7 +159,7 @@ const AppShell: React.FC = () => {
           </nav>
 
           {/* Zone 3: Quick Theme, Currency/Settings, Notifications, Android Install & Cart CTA */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0">
             <PushNotificationBell />
             <PWAInstallButton variant="compact" />
             <button
@@ -183,26 +183,13 @@ const AppShell: React.FC = () => {
                   ? 'الوضع الداكن (حسب اللغة)'
                   : 'Dark Mode'
               }
-              className="min-h-[40px] min-w-[40px] md:min-h-[42px] md:min-w-[42px] rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] inline-flex items-center justify-center transition-colors shrink-0"
+              className="min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] inline-flex items-center justify-center transition-colors shrink-0"
             >
               {theme === 'dark' ? (
                 <Sun className="w-4 h-4 text-[#F59E0B]" />
               ) : (
                 <Moon className="w-4 h-4 text-[#D97706]" />
               )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('about')}
-              aria-label={lang === 'ar' ? 'من نحن وتواصل معنا' : 'About & Contact'}
-              className={`md:hidden min-h-[40px] px-2.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0 ${
-                view === 'about'
-                  ? 'border-[#D97706] bg-amber-50 text-[#D97706]'
-                  : 'border-[#E5DEC9] bg-white text-[#1F2937]'
-              }`}
-            >
-              <Info className="w-3.5 h-3.5" />
-              <span>{lang === 'ar' ? 'من نحن' : 'About'}</span>
             </button>
             <button
               type="button"
@@ -221,14 +208,14 @@ const AppShell: React.FC = () => {
                   ? 'تسجيل الدخول أو الدخول كزائر'
                   : 'Sign In or Continue as Guest'
               }
-              className="min-h-[40px] md:min-h-[42px] px-2.5 sm:px-3 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-xs font-semibold text-[#1F2937] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+              className="min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:px-2.5 md:px-3 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-xs font-semibold text-[#1F2937] inline-flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
             >
               <User
                 className={`w-4 h-4 ${
                   authStatus === 'customer' ? 'text-[#4D7C0F]' : 'text-[#D97706]'
                 }`}
               />
-              <span className="hidden sm:inline max-w-[90px] truncate">
+              <span className="hidden md:inline max-w-[90px] truncate">
                 {authStatus === 'customer' && currentCustomer
                   ? currentCustomer.displayName.split(' ')[0]
                   : lang === 'ar'
@@ -241,9 +228,9 @@ const AppShell: React.FC = () => {
               onClick={() => setIsSettingsOpen(true)}
               aria-label={lang === 'ar' ? 'إعدادات العملة' : 'Currency Settings'}
               title={lang === 'ar' ? 'تغيير العملة والإعدادات' : 'Change Currency & Settings'}
-              className="min-h-[42px] px-3 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-xs font-bold text-[#1F2937] inline-flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0"
+              className="min-h-[36px] sm:min-h-[40px] px-2 sm:px-3 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-[11px] sm:text-xs font-bold text-[#1F2937] inline-flex items-center gap-1 transition-colors whitespace-nowrap shrink-0"
             >
-              <Coins className="w-4 h-4 text-[#D97706]" />
+              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D97706]" />
               <span>{currencySymbol}</span>
             </button>
             <button
@@ -253,9 +240,9 @@ const AppShell: React.FC = () => {
                 lang === 'ar' ? 'تغيير اللغة إلى الإنجليزية' : 'Switch language to Arabic'
               }
               title={lang === 'ar' ? 'English (EN)' : 'العربية (AR)'}
-              className="min-h-[40px] min-w-[40px] md:min-h-[42px] md:min-w-[42px] px-1.5 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] inline-flex flex-col items-center justify-center gap-0.5 transition-colors shrink-0"
+              className="min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] px-1 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] inline-flex flex-col items-center justify-center gap-0.5 transition-colors shrink-0"
             >
-              <Globe className="w-4 h-4 text-[#D97706]" />
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#D97706]" />
               <span className="text-[9px] font-bold leading-none tracking-wider text-[#1F2937]">
                 {lang === 'ar' ? 'EN' : 'AR'}
               </span>
@@ -263,7 +250,7 @@ const AppShell: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCartOpen(true)}
-              className="min-h-[42px] px-4 py-2 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-semibold inline-flex items-center gap-2 transition-colors whitespace-nowrap shrink-0"
+              className="hidden sm:inline-flex min-h-[40px] px-3.5 md:px-4 py-2 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-semibold items-center gap-2 transition-colors whitespace-nowrap shrink-0"
             >
               <ShoppingBag className="w-4 h-4" />
               <span>{lang === 'ar' ? 'السلة' : 'Bag'}</span>
@@ -274,7 +261,7 @@ const AppShell: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 pt-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
         {view === 'home' && <HomeView />}
         {view === 'offers' && <OffersView />}
         {view === 'about' && <AboutContactView />}
@@ -283,9 +270,9 @@ const AppShell: React.FC = () => {
         {view === 'admin' && <AdminArchitectureView />}
       </main>
 
-      {/* Quiet Footer */}
-      <footer className="hidden md:block border-t border-[#E5DEC9] bg-white/60 mt-10">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex flex-wrap items-center justify-between gap-4 text-xs text-[#1F2937]/65">
+      {/* Footer — Visible on Mobile, Tablet & Desktop */}
+      <footer className="border-t border-[#E5DEC9] bg-white/60 mt-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#1F2937]/70 text-center md:text-start">
           <div className="flex items-center gap-2.5">
             <img
               src="/assets/aistudio/_______________2027_____2__-_Copy_de345892.jpg"
@@ -298,13 +285,16 @@ const AppShell: React.FC = () => {
                 : '© 2026 Kunooz Doan — Natural Honey, Raisins & Organic Almonds'}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
             <button
               type="button"
               onClick={() => setView('about')}
-              className="hover:text-[#D97706]"
+              className={`hover:text-[#D97706] inline-flex items-center gap-1 ${
+                view === 'about' ? 'text-[#D97706] font-bold' : ''
+              }`}
             >
-              {lang === 'ar' ? 'من نحن وتواصل معنا' : 'About & Contact Us'}
+              <Info className="w-3.5 h-3.5 text-[#D97706]" />
+              <span>{lang === 'ar' ? 'من نحن وتواصل معنا' : 'About & Contact Us'}</span>
             </button>
             <button
               type="button"
@@ -349,16 +339,16 @@ const AppShell: React.FC = () => {
         </div>
       </footer>
 
-      {/* Mobile Fixed Bottom Thumb Navigation (<10% viewport height) */}
+      {/* Phone & Tablet Fixed Bottom Navigation Bar (< lg) */}
       <nav
-        aria-label={lang === 'ar' ? 'شريط التنقل السفلي' : 'Mobile Bottom Navigation'}
-        className="md:hidden fixed bottom-0 start-0 end-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E5DEC9] grid grid-cols-5 h-16"
+        aria-label={lang === 'ar' ? 'شريط التنقل السفلي' : 'Mobile & Tablet Bottom Navigation'}
+        className="lg:hidden fixed bottom-0 start-0 end-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E5DEC9] grid grid-cols-5 h-16 px-1 shadow-lg"
       >
         <button
           type="button"
           onClick={() => setView('home')}
-          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
-            view === 'home' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/70'
+          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] sm:text-xs font-medium ${
+            view === 'home' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/75'
           }`}
         >
           <Home className="w-5 h-5" />
@@ -368,8 +358,8 @@ const AppShell: React.FC = () => {
         <button
           type="button"
           onClick={() => setView('offers')}
-          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
-            view === 'offers' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/70'
+          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] sm:text-xs font-medium ${
+            view === 'offers' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/75'
           }`}
         >
           <Tag className="w-5 h-5" />
@@ -379,30 +369,35 @@ const AppShell: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsCartOpen(true)}
-          className="flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-[#1F2937]/70 relative"
+          className="flex flex-col items-center justify-center gap-0.5 text-[11px] sm:text-xs font-medium text-[#1F2937]/75 relative"
         >
-          <ShoppingBag className="w-5 h-5" />
-          <span className="tabular-nums">
-            {lang === 'ar' ? `السلة (${cartCount})` : `Bag (${cartCount})`}
-          </span>
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -end-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-[#D97706] text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                {cartCount}
+              </span>
+            )}
+          </div>
+          <span>{lang === 'ar' ? 'السلة' : 'Bag'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setView('profile')}
-          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
-            view === 'profile' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/70'
+          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] sm:text-xs font-medium ${
+            view === 'profile' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/75'
           }`}
         >
           <Award className="w-5 h-5" />
-          <span>{lang === 'ar' ? 'الملف الشخصي' : 'Profile'}</span>
+          <span>{lang === 'ar' ? 'حسابي' : 'Profile'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setView('admin')}
-          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
-            view === 'admin' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/70'
+          className={`flex flex-col items-center justify-center gap-0.5 text-[11px] sm:text-xs font-medium ${
+            view === 'admin' ? 'text-[#D97706] font-bold' : 'text-[#1F2937]/75'
           }`}
         >
           <Settings2 className="w-5 h-5" />
@@ -423,7 +418,7 @@ const AppShell: React.FC = () => {
       {toast && (
         <div
           role="status"
-          className="fixed bottom-20 md:bottom-6 start-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-[#1F2937] text-white text-xs sm:text-sm font-medium shadow-xl max-w-[90vw] text-center"
+          className="fixed bottom-20 lg:bottom-6 start-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-[#1F2937] text-white text-xs sm:text-sm font-medium shadow-xl max-w-[92vw] text-center"
         >
           {toast}
         </div>

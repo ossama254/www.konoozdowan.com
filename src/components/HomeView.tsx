@@ -128,7 +128,7 @@ export const HomeView: React.FC = () => {
       : ['Sidr', 'Doan', 'Dhabayah', 'Sumra', 'Raisins', 'Hadhramaut'];
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 sm:space-y-8 pb-8 sm:pb-12">
       {/* Top Hero Search Bar */}
       {homeSettings.showSearchBar && (
         <section aria-label={lang === 'ar' ? 'البحث السريع في المتجر' : 'Quick Store Search'} className="relative z-20">
@@ -181,9 +181,9 @@ export const HomeView: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[#1F2937]/60 font-medium me-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              <span className="text-[#1F2937]/60 font-medium me-1 whitespace-nowrap shrink-0">
                 {lang === 'ar' ? 'بحث سريع:' : 'Quick search:'}
               </span>
               {quickSearchTerms.map((term) => (
@@ -195,7 +195,7 @@ export const HomeView: React.FC = () => {
                     setSelectedCategory('all');
                     setIsTopSearchFocused(true);
                   }}
-                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold whitespace-nowrap shrink-0 transition-colors ${
                     searchQuery.trim().toLowerCase() === term.toLowerCase()
                       ? 'border-[#D97706] bg-amber-50 text-[#D97706]'
                       : 'border-[#E5DEC9] bg-[#FFFBEB]/60 text-[#1F2937]/75 hover:border-[#D97706]/50'
@@ -317,9 +317,9 @@ export const HomeView: React.FC = () => {
         <section aria-label={lang === 'ar' ? 'العروض الموسمية' : 'Seasonal Highlights'}>
           <div className="relative rounded-3xl overflow-hidden border border-[#E5DEC9] bg-white shadow-sm">
             <div className="grid lg:grid-cols-12 items-stretch">
-              <div className="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-between gap-6 bg-gradient-to-br from-[#FFFBEB] via-white to-amber-50/60">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
+              <div className="lg:col-span-6 p-5 sm:p-8 lg:p-10 flex flex-col justify-between gap-5 sm:gap-6 bg-gradient-to-br from-[#FFFBEB] via-white to-amber-50/60">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
                     <span className="text-xs font-semibold text-[#4D7C0F] tracking-wide">
                       {t(activeBanner.kicker)}
                     </span>
@@ -333,19 +333,19 @@ export const HomeView: React.FC = () => {
                     </button>
                   </div>
 
-                  <h1 className="font-display-serif text-2xl sm:text-4xl font-bold text-[#1F2937] leading-tight text-balance">
+                  <h1 className="font-display-serif text-xl sm:text-3xl lg:text-4xl font-bold text-[#1F2937] leading-tight text-balance">
                     {t(activeBanner.title)}
                   </h1>
-                  <p className="text-sm sm:text-base text-[#1F2937]/75 leading-relaxed max-w-xl">
+                  <p className="text-xs sm:text-base text-[#1F2937]/75 leading-relaxed max-w-xl">
                     {t(activeBanner.subtitle)}
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pt-1 sm:pt-2">
                   <button
                     type="button"
                     onClick={() => setSelectedCategory(activeBanner.targetCategory)}
-                    className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white text-sm font-semibold transition-colors whitespace-nowrap"
+                    className="min-h-[42px] sm:min-h-[44px] px-5 sm:px-6 py-2.5 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap"
                   >
                     {t(activeBanner.cta)}
                   </button>
@@ -359,7 +359,7 @@ export const HomeView: React.FC = () => {
                             (i) => (i - 1 + activeBanners.length) % activeBanners.length
                           )
                         }
-                        className="min-h-[44px] min-w-[44px] rounded-xl border border-[#E5DEC9] bg-white hover:bg-amber-50 flex items-center justify-center text-[#1F2937] transition-colors"
+                        className="min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-xl border border-[#E5DEC9] bg-white hover:bg-amber-50 flex items-center justify-center text-[#1F2937] transition-colors"
                         aria-label={lang === 'ar' ? 'العرض السابق' : 'Previous banner'}
                       >
                         {lang === 'ar' ? (
@@ -376,7 +376,7 @@ export const HomeView: React.FC = () => {
                         onClick={() =>
                           setBannerIndex((i) => (i + 1) % activeBanners.length)
                         }
-                        className="min-h-[44px] min-w-[44px] rounded-xl border border-[#E5DEC9] bg-white hover:bg-amber-50 flex items-center justify-center text-[#1F2937] transition-colors"
+                        className="min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-xl border border-[#E5DEC9] bg-white hover:bg-amber-50 flex items-center justify-center text-[#1F2937] transition-colors"
                         aria-label={lang === 'ar' ? 'العرض التالي' : 'Next banner'}
                       >
                         {lang === 'ar' ? (
@@ -390,7 +390,7 @@ export const HomeView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="lg:col-span-6 relative min-h-[240px] sm:min-h-[320px] lg:min-h-[380px]">
+              <div className="lg:col-span-6 relative aspect-[16/10] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[380px]">
                 <ProductImage
                   src={activeBanner.image}
                   alt={t(activeBanner.title)}
@@ -489,7 +489,7 @@ export const HomeView: React.FC = () => {
                 return (
                   <div
                     key={offer.id}
-                    className="p-3.5 rounded-2xl bg-[#FFFBEB]/70 border border-[#E5DEC9] flex items-center gap-3.5 justify-between"
+                    className="p-3.5 rounded-2xl bg-[#FFFBEB]/70 border border-[#E5DEC9] flex flex-wrap sm:flex-nowrap items-center gap-3 justify-between"
                   >
                     <div
                       onClick={() => setSelectedProduct(prod)}
@@ -505,7 +505,7 @@ export const HomeView: React.FC = () => {
                       <div className="text-[11px] font-semibold text-[#4D7C0F] truncate">
                         {t(offer.badgeText)}
                       </div>
-                      <h3 className="text-xs sm:text-sm font-bold text-[#1F2937] truncate">
+                      <h3 className="text-xs sm:text-sm font-bold text-[#1F2937] line-clamp-1">
                         {t(offer.title)}
                       </h3>
                       <div className="flex items-baseline gap-2 text-xs tabular-nums">
@@ -520,7 +520,7 @@ export const HomeView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => claimOffer(offer)}
-                      className="min-h-[38px] px-3 rounded-xl bg-[#1F2937] hover:bg-black text-white text-xs font-semibold whitespace-nowrap shrink-0 transition-colors"
+                      className="w-full sm:w-auto min-h-[38px] px-3.5 rounded-xl bg-[#1F2937] hover:bg-black text-white text-xs font-semibold whitespace-nowrap shrink-0 transition-colors"
                     >
                       {lang === 'ar' ? 'اطلب العرض' : 'Claim'}
                     </button>
@@ -602,7 +602,7 @@ export const HomeView: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredProducts.map((product) => {
               const selectedWeightId = selectedCardWeights[product.id] ?? product.weightOptions[0].id;
               const activeOption =
@@ -662,7 +662,7 @@ export const HomeView: React.FC = () => {
                     </button>
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3.5 sm:gap-4">
                     <div className="space-y-1.5">
                       {/* Unboxed clean metadata line */}
                       <div className="flex items-center justify-between gap-2 text-xs text-[#4D7C0F] font-medium">
@@ -706,7 +706,7 @@ export const HomeView: React.FC = () => {
                         ))}
                       </select>
 
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2.5">
                         <div>
                           <div className="flex items-baseline gap-2">
                             <span className="text-lg font-bold text-[#1F2937] tabular-nums">

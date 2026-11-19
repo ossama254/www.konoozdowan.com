@@ -124,12 +124,12 @@ export const ProfileLoyaltyView: React.FC = () => {
   return (
     <div className="space-y-7 pb-12">
       {/* Profile Header Summary */}
-      <div className="p-6 rounded-3xl bg-white border border-[#E5DEC9] flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white border border-[#E5DEC9] flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
+        <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
           <img
             src="/assets/aistudio/_______________2027_____2__-_Copy_de345892.jpg"
             alt={lang === 'ar' ? 'شعار كنوز دوعن' : 'Kunooz Doan Logo'}
-            className="w-16 h-16 object-contain rounded-2xl border border-[#E5DEC9] bg-white p-1 shrink-0"
+            className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-2xl border border-[#E5DEC9] bg-white p-1 shrink-0"
           />
           <div className="space-y-1.5">
             <div className="text-xs font-semibold text-[#4D7C0F]">
@@ -184,34 +184,34 @@ export const ProfileLoyaltyView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6 shrink-0 border-t md:border-t-0 pt-4 md:pt-0 border-[#E5DEC9]">
+        <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:gap-6 shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0 border-[#E5DEC9] text-center sm:text-start">
           <div>
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'رصيد النقاط المتاح' : 'Available Points'}
             </div>
-            <div className="text-2xl font-bold text-[#D97706] tabular-nums">{loyaltyPoints}</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#D97706] tabular-nums">{loyaltyPoints}</div>
           </div>
-          <div className="h-10 w-px bg-[#E5DEC9]" />
+          <div className="hidden sm:block h-10 w-px bg-[#E5DEC9]" />
           <button
             type="button"
             onClick={() => setActiveTab('orders')}
-            className="text-start hover:opacity-80 transition-opacity"
+            className="text-center sm:text-start hover:opacity-80 transition-opacity"
           >
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'الطلبات' : 'Orders'}
             </div>
-            <div className="text-2xl font-bold text-[#1F2937] tabular-nums">{orders.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1F2937] tabular-nums">{orders.length}</div>
           </button>
-          <div className="h-10 w-px bg-[#E5DEC9]" />
+          <div className="hidden sm:block h-10 w-px bg-[#E5DEC9]" />
           <button
             type="button"
             onClick={() => setActiveTab('wishlist')}
-            className="text-start hover:opacity-80 transition-opacity"
+            className="text-center sm:text-start hover:opacity-80 transition-opacity"
           >
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'المفضلة' : 'Saved'}
             </div>
-            <div className="text-2xl font-bold text-[#DC2626] tabular-nums">
+            <div className="text-xl sm:text-2xl font-bold text-[#DC2626] tabular-nums">
               {wishlistedProducts.length}
             </div>
           </button>

@@ -20,6 +20,7 @@ import {
   Layers,
   LayoutTemplate,
   Lock,
+  MapPin,
   MessageSquare,
   PackageCheck,
   Phone,
@@ -50,6 +51,7 @@ import {
   AdminCustomerRecord,
   CurrencyConfig,
   DomesticShippingZone,
+  DomesticZoneGroup,
   HeroBanner,
   InternationalCountryOption,
   LoyaltyReward,
@@ -133,6 +135,7 @@ export const AdminArchitectureView: React.FC = () => {
     addDomesticZone,
     updateDomesticZone,
     deleteDomesticZone,
+    matchDomesticZoneByLocation,
     internationalCountries,
     addInternationalCountry,
     updateInternationalCountry,
@@ -319,14 +322,38 @@ export const AdminArchitectureView: React.FC = () => {
 
   // Shipping & Zones CRUD state
   const [thresholdInput, setThresholdInput] = useState<number>(freeShippingThreshold);
+  const [zoneGroupFilter, setZoneGroupFilter] = useState<'all' | DomesticZoneGroup>('all');
   const [zoneDrafts, setZoneDrafts] = useState<
-    Record<string, { nameAr: string; nameEn: string; descAr: string; descEn: string; fee: number }>
+    Record<
+      string,
+      {
+        group: DomesticZoneGroup;
+        nameAr: string;
+        nameEn: string;
+        descAr: string;
+        descEn: string;
+        coverageAreas: string;
+        centerLat: string;
+        centerLng: string;
+        radiusKm: string;
+        fee: number;
+        active: boolean;
+      }
+    >
   >({});
+  const [newZoneGroup, setNewZoneGroup] = useState<DomesticZoneGroup>('inside_sanaa');
   const [newZoneNameAr, setNewZoneNameAr] = useState('');
   const [newZoneNameEn, setNewZoneNameEn] = useState('');
   const [newZoneDescAr, setNewZoneDescAr] = useState('');
   const [newZoneDescEn, setNewZoneDescEn] = useState('');
-  const [newZoneFee, setNewZoneFee] = useState(2000);
+  const [newZoneCoverage, setNewZoneCoverage] = useState('');
+  const [newZoneLat, setNewZoneLat] = useState('15.3547');
+  const [newZoneLng, setNewZoneLng] = useState('44.2066');
+  const [newZoneRadius, setNewZoneRadius] = useState('6');
+  const [newZoneFee, setNewZoneFee] = useState(1200);
+  const [geoTestText, setGeoTestText] = useState('');
+  const [geoTestLat, setGeoTestLat] = useState('15.3025');
+  const [geoTestLng, setGeoTestLng] = useState('44.1985');
 
   const [countryDrafts, setCountryDrafts] = useState<
     Record<
@@ -993,11 +1020,17 @@ export const AdminArchitectureView: React.FC = () => {
   // --- Shipping Zones helpers ---
   const getZoneDraft = (z: DomesticShippingZone) =>
     zoneDrafts[z.id] ?? {
+      group: (z.group ?? (z.id.includes('outside') ? 'outside_sanaa' : 'inside_sanaa')) as DomesticZoneGroup,
       nameAr: z.name.ar,
       nameEn: z.name.en,
       descAr: z.description.ar,
       descEn: z.description.en,
+      coverageAreas: z.coverageAreas ?? '',
+      centerLat: z.centerLat !== undefined ? String(z.centerLat) : '',
+      centerLng: z.centerLng !== undefined ? String(z.centerLng) : '',
+      radiusKm: z.radiusKm !== undefined ? String(z.radiusKm) : '',
       fee: z.fee,
+      active: z.active !== false,
     };
 
   const handleAddZone = (e: React.FormEvent) => {
@@ -1005,19 +1038,36 @@ export const AdminArchitectureView: React.FC = () => {
     if (!newZoneNameAr.trim()) return;
     const ar = newZoneNameAr.trim();
     const en = newZoneNameEn.trim() || ar;
+    const parsedLat = newZoneLat.trim() ? Number(newZoneLat) : undefined;
+    const parsedLng = newZoneLng.trim() ? Number(newZoneLng) : undefined;
+    const parsedRad = newZoneRadius.trim() ? Number(newZoneRadius) : undefined;
     addDomesticZone({
-      id: `zone_${Date.now()}`,
+      id: `zone_${newZoneGroup}_${Date.now()}`,
+      group: newZoneGroup,
       name: { ar, en },
       description: {
-        ar: newZoneDescAr.trim() || 'توصيل محلي سريع ومبرد',
-        en: newZoneDescEn.trim() || 'Fast chilled local delivery',
+        ar:
+          newZoneDescAr.trim() ||
+          (newZoneGroup === 'inside_sanaa' ? 'توصيل سريع داخل النطاق' : 'شحن مبرد للمحافظة'),
+        en:
+          newZoneDescEn.trim() ||
+          (newZoneGroup === 'inside_sanaa' ? 'Fast delivery within zone' : 'Chilled regional delivery'),
       },
+      coverageAreas: newZoneCoverage.trim() || undefined,
+      centerLat: parsedLat !== undefined && Number.isFinite(parsedLat) ? parsedLat : undefined,
+      centerLng: parsedLng !== undefined && Number.isFinite(parsedLng) ? parsedLng : undefined,
+      radiusKm:
+        parsedRad !== undefined && Number.isFinite(parsedRad) && parsedRad > 0
+          ? parsedRad
+          : undefined,
       fee: Math.max(0, newZoneFee),
+      active: true,
     });
     setNewZoneNameAr('');
     setNewZoneNameEn('');
     setNewZoneDescAr('');
     setNewZoneDescEn('');
+    setNewZoneCoverage('');
   };
 
   const getCountryDraft = (c: InternationalCountryOption) =>
@@ -1439,22 +1489,22 @@ export const AdminArchitectureView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="p-6 rounded-3xl bg-white border border-[#E5DEC9] space-y-1">
-        <h1 className="text-2xl font-bold text-[#1F2937]">
+    <div className="space-y-5 sm:space-y-6 pb-12">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white border border-[#E5DEC9] space-y-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1F2937]">
           {lang === 'ar'
             ? 'لوحة التحكم الكاملة والإدارة'
             : 'Full Store Administration & Operations'}
         </h1>
         <p className="text-xs sm:text-sm text-[#1F2937]/65">
           {lang === 'ar'
-            ? 'تحكم كامل بإضافة وتعديل وحذف جميع الأصناف، الأقسام، الأوزان، العروض، الكوبونات، أسعار الشحن، وأسعار الصرف للعملات.'
-            : 'Full CRUD control over products, categories, weights, offers, coupons, domestic & global shipping rates, and live currency exchange rates.'}
+            ? 'تحكم كامل بإضافة وتعديل وحذف جميع الأصناف، الأقسام، الأوزان، العروض، الكوبونات، النطاقات الجغرافية للتوصيل، وأسعار الصرف.'
+            : 'Full CRUD control over products, categories, weights, offers, coupons, custom geographic delivery zones, and exchange rates.'}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         <button
           type="button"
           onClick={() => setTab('inventory')}
@@ -3080,22 +3130,26 @@ export const AdminArchitectureView: React.FC = () => {
             </form>
           </div>
 
-          {/* Domestic Delivery Rates & Free Shipping Threshold */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#E5DEC9] space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-4">
+          {/* Domestic Delivery Geographic Zones & Variable Fees */}
+          <div className="p-4 sm:p-6 rounded-3xl bg-white border border-[#E5DEC9] space-y-5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <h2 className="text-base font-bold text-[#1F2937] flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-[#D97706]" />
-                  <span>{lang === 'ar' ? 'أسعار التوصيل المحلي وحد التوصيل المجاني' : 'Domestic Delivery Zones & Free Threshold'}</span>
+                  <MapPin className="w-5 h-5 text-[#D97706] shrink-0" />
+                  <span>
+                    {lang === 'ar'
+                      ? 'النطاقات الجغرافية المخصصة داخل وخارج صنعاء ورسوم التوصيل المتغيرة'
+                      : 'Custom Geographic Delivery Zones (Inside & Outside Sana\'a)'}
+                  </span>
                 </h2>
                 <p className="text-xs text-[#1F2937]/65 mt-0.5">
                   {lang === 'ar'
-                    ? 'عدّل رسوم التوصيل داخل وخارج صنعاء أو أضف مناطق توصيل جديدة وحدد مبلغ التوصيل المجاني.'
-                    : 'Add, edit, or delete local delivery zones and set the free shipping order threshold.'}
+                    ? 'حدد نطاقات مخصصة بالأحياء أو الإحداثيات ونصف القطر (كم) داخل صنعاء وخارجها مع رسوم توصيل متغيرة وحساب تلقائي أدق عند الطلب.'
+                    : 'Define custom areas inside & outside Sana\'a with variable delivery fees, neighborhood keywords, and GPS radius (km) for accurate automatic calculation.'}
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 bg-[#FFFBEB] border border-[#E5DEC9] p-2.5 rounded-2xl text-xs">
+              <div className="flex flex-wrap items-center gap-2 bg-[#FFFBEB] border border-[#E5DEC9] p-2.5 rounded-2xl text-xs">
                 <span className="font-semibold text-[#1F2937]">
                   {lang === 'ar' ? 'توصيل مجاني للطلبات فوق (ر.ي):' : 'Free Delivery Over (YER):'}
                 </span>
@@ -3104,7 +3158,7 @@ export const AdminArchitectureView: React.FC = () => {
                   min={0}
                   value={thresholdInput}
                   onChange={(e) => setThresholdInput(Number(e.target.value))}
-                  className="w-28 min-h-[34px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white font-bold tabular-nums text-[#4D7C0F]"
+                  className="w-24 sm:w-28 min-h-[34px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white font-bold tabular-nums text-[#4D7C0F]"
                 />
                 <button
                   type="button"
@@ -3116,141 +3170,523 @@ export const AdminArchitectureView: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-3">
-              {domesticZones.map((zone) => {
-                const draft = getZoneDraft(zone);
-                return (
-                  <div
-                    key={zone.id}
-                    className="p-4 rounded-2xl bg-[#FFFBEB]/60 border border-[#E5DEC9] grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end text-xs"
+            {/* Scope Filter & Live Geo Accuracy Calculator */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+              <div className="lg:col-span-5 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs">
+                {(
+                  [
+                    { id: 'all', ar: `الكل (${domesticZones.length})`, en: `All (${domesticZones.length})` },
+                    {
+                      id: 'inside_sanaa',
+                      ar: `داخل صنعاء (${domesticZones.filter((z) => (z.group ?? 'inside_sanaa') === 'inside_sanaa').length})`,
+                      en: `Inside Sana'a (${domesticZones.filter((z) => (z.group ?? 'inside_sanaa') === 'inside_sanaa').length})`,
+                    },
+                    {
+                      id: 'outside_sanaa',
+                      ar: `خارج صنعاء (${domesticZones.filter((z) => z.group === 'outside_sanaa').length})`,
+                      en: `Outside Sana'a (${domesticZones.filter((z) => z.group === 'outside_sanaa').length})`,
+                    },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setZoneGroupFilter(item.id)}
+                    className={`min-h-[36px] px-3 rounded-xl font-semibold whitespace-nowrap shrink-0 transition-colors ${
+                      zoneGroupFilter === item.id
+                        ? 'bg-[#D97706] text-white'
+                        : 'bg-[#FFFBEB] border border-[#E5DEC9] text-[#1F2937]'
+                    }`}
                   >
-                    <label className="sm:col-span-3 space-y-1 font-semibold">
-                      <span>{lang === 'ar' ? 'اسم المنطقة (عربي)' : 'Zone Name (AR)'}</span>
-                      <input
-                        type="text"
-                        value={draft.nameAr}
-                        onChange={(e) =>
-                          setZoneDrafts((prev) => ({
-                            ...prev,
-                            [zone.id]: { ...draft, nameAr: e.target.value },
-                          }))
-                        }
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-[#E5DEC9] bg-white"
-                      />
-                    </label>
-                    <label className="sm:col-span-2 space-y-1 font-semibold">
-                      <span>{lang === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}</span>
-                      <input
-                        type="text"
-                        value={draft.nameEn}
-                        onChange={(e) =>
-                          setZoneDrafts((prev) => ({
-                            ...prev,
-                            [zone.id]: { ...draft, nameEn: e.target.value },
-                          }))
-                        }
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-[#E5DEC9] bg-white"
-                      />
-                    </label>
-                    <label className="sm:col-span-3 space-y-1 font-semibold">
-                      <span>{lang === 'ar' ? 'الوصف (عربي)' : 'Description (AR)'}</span>
-                      <input
-                        type="text"
-                        value={draft.descAr}
-                        onChange={(e) =>
-                          setZoneDrafts((prev) => ({
-                            ...prev,
-                            [zone.id]: { ...draft, descAr: e.target.value },
-                          }))
-                        }
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-[#E5DEC9] bg-white"
-                      />
-                    </label>
-                    <label className="sm:col-span-2 space-y-1 font-semibold">
-                      <span>{lang === 'ar' ? 'رسوم التوصيل (ر.ي)' : 'Fee (YER)'}</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={draft.fee}
-                        onChange={(e) =>
-                          setZoneDrafts((prev) => ({
-                            ...prev,
-                            [zone.id]: { ...draft, fee: Number(e.target.value) },
-                          }))
-                        }
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-[#E5DEC9] bg-white font-bold tabular-nums text-[#D97706]"
-                      />
-                    </label>
-                    <div className="sm:col-span-2 flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateDomesticZone(zone.id, {
-                            name: { ar: draft.nameAr.trim(), en: draft.nameEn.trim() },
-                            description: { ar: draft.descAr.trim(), en: draft.descEn.trim() },
-                            fee: Math.max(0, draft.fee),
-                          })
-                        }
-                        className="flex-1 min-h-[34px] px-3 rounded-lg bg-[#4D7C0F] text-white font-semibold inline-flex items-center justify-center gap-1"
-                      >
-                        <Save className="w-3.5 h-3.5" />
-                        <span>{lang === 'ar' ? 'حفظ' : 'Save'}</span>
-                      </button>
-                      {domesticZones.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => deleteDomesticZone(zone.id)}
-                          aria-label={lang === 'ar' ? 'حذف المنطقة' : 'Delete zone'}
-                          className="min-h-[34px] px-2.5 rounded-lg bg-white border border-[#E5DEC9] hover:border-red-300 text-red-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                    {lang === 'ar' ? item.ar : item.en}
+                  </button>
+                ))}
+              </div>
+
+              <div className="lg:col-span-7 p-3 rounded-2xl bg-[#FFFBEB] border border-[#E5DEC9] flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-bold text-[#1F2937]">
+                  {lang === 'ar' ? 'اختبار دقة الحساب:' : 'Test Geo Match:'}
+                </span>
+                <input
+                  type="text"
+                  value={geoTestText}
+                  onChange={(e) => setGeoTestText(e.target.value)}
+                  placeholder={lang === 'ar' ? 'اسم حي/مدينة (مثل: حدة، عدن)' : 'Area/city (e.g. Hadda)'}
+                  className="flex-1 min-w-[130px] min-h-[34px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                />
+                <input
+                  type="number"
+                  step="0.0001"
+                  dir="ltr"
+                  value={geoTestLat}
+                  onChange={(e) => setGeoTestLat(e.target.value)}
+                  placeholder="Lat"
+                  className="w-24 min-h-[34px] px-2 rounded-lg border border-[#E5DEC9] bg-white tabular-nums"
+                />
+                <input
+                  type="number"
+                  step="0.0001"
+                  dir="ltr"
+                  value={geoTestLng}
+                  onChange={(e) => setGeoTestLng(e.target.value)}
+                  placeholder="Lng"
+                  className="w-24 min-h-[34px] px-2 rounded-lg border border-[#E5DEC9] bg-white tabular-nums"
+                />
+                {(() => {
+                  const res = matchDomesticZoneByLocation(
+                    geoTestLat ? Number(geoTestLat) : undefined,
+                    geoTestLng ? Number(geoTestLng) : undefined,
+                    geoTestText
+                  );
+                  return res ? (
+                    <span className="px-2.5 py-1 rounded-lg bg-lime-100 text-[#4D7C0F] font-bold tabular-nums">
+                      {t(res.zone.name)} · {formatPrice(res.zone.fee)}
+                      {res.distanceKm !== undefined ? ` (${res.distanceKm} km)` : ''}
+                    </span>
+                  ) : (
+                    <span className="text-[#1F2937]/60">
+                      {lang === 'ar' ? 'خارج النطاق المحدد' : 'No range match'}
+                    </span>
+                  );
+                })()}
+              </div>
             </div>
 
+            {/* Zones List */}
+            <div className="space-y-3">
+              {domesticZones
+                .filter((z) =>
+                  zoneGroupFilter === 'all'
+                    ? true
+                    : (z.group ?? (z.id.includes('outside') ? 'outside_sanaa' : 'inside_sanaa')) ===
+                      zoneGroupFilter
+                )
+                .map((zone) => {
+                  const draft = getZoneDraft(zone);
+                  return (
+                    <div
+                      key={zone.id}
+                      className={`p-4 rounded-2xl border space-y-3 text-xs ${
+                        draft.active
+                          ? 'bg-[#FFFBEB]/60 border-[#E5DEC9]'
+                          : 'bg-gray-100/70 border-gray-200 opacity-75'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`px-2.5 py-1 rounded-lg font-bold text-[11px] ${
+                              draft.group === 'inside_sanaa'
+                                ? 'bg-amber-100 text-[#D97706]'
+                                : 'bg-lime-100 text-[#4D7C0F]'
+                            }`}
+                          >
+                            {draft.group === 'inside_sanaa'
+                              ? lang === 'ar'
+                                ? 'داخل صنعاء'
+                                : "Inside Sana'a"
+                              : lang === 'ar'
+                              ? 'خارج صنعاء'
+                              : "Outside Sana'a"}
+                          </span>
+                          <span className="font-bold text-sm text-[#1F2937]">{draft.nameAr}</span>
+                          {draft.radiusKm && (
+                            <span className="px-2 py-0.5 rounded-lg bg-white border border-[#E5DEC9] text-[11px] text-[#1F2937]/70 tabular-nums">
+                              {lang === 'ar' ? `نصف قطر ${draft.radiusKm} كم` : `${draft.radiusKm} km radius`}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextActive = !draft.active;
+                            setZoneDrafts((prev) => ({
+                              ...prev,
+                              [zone.id]: { ...draft, active: nextActive },
+                            }));
+                            updateDomesticZone(zone.id, { active: nextActive });
+                          }}
+                          className={`min-h-[32px] px-3 rounded-xl font-bold text-[11px] inline-flex items-center gap-1 ${
+                            draft.active
+                              ? 'bg-lime-100 text-[#4D7C0F]'
+                              : 'bg-white border border-[#E5DEC9] text-[#1F2937]/70'
+                          }`}
+                        >
+                          {draft.active ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                          <span>{draft.active ? (lang === 'ar' ? 'مفعّل' : 'Active') : lang === 'ar' ? 'معطّل' : 'Paused'}</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
+                        <label className="lg:col-span-2 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'التصنيف الجغرافي' : 'Zone Scope'}</span>
+                          <select
+                            value={draft.group}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: {
+                                  ...draft,
+                                  group: e.target.value as DomesticZoneGroup,
+                                },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                          >
+                            <option value="inside_sanaa">
+                              {lang === 'ar' ? 'داخل صنعاء' : "Inside Sana'a"}
+                            </option>
+                            <option value="outside_sanaa">
+                              {lang === 'ar' ? 'خارج صنعاء' : "Outside Sana'a"}
+                            </option>
+                          </select>
+                        </label>
+
+                        <label className="lg:col-span-3 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'اسم النطاق (عربي)' : 'Zone Name (AR)'}</span>
+                          <input
+                            type="text"
+                            value={draft.nameAr}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, nameAr: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-3 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}</span>
+                          <input
+                            type="text"
+                            value={draft.nameEn}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, nameEn: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-2 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'الوصف (عربي)' : 'Description (AR)'}</span>
+                          <input
+                            type="text"
+                            value={draft.descAr}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, descAr: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-2 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'رسوم التوصيل (ر.ي)' : 'Fee (YER)'}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={draft.fee}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, fee: Number(e.target.value) },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white font-bold tabular-nums text-[#D97706]"
+                          />
+                        </label>
+
+                        <label className="sm:col-span-2 lg:col-span-5 space-y-1 font-semibold">
+                          <span>
+                            {lang === 'ar'
+                              ? 'الأحياء / المدن المشمولة (مفصولة بفاصلة للمطابقة التلقائية)'
+                              : 'Covered Neighborhoods / Cities (comma-separated)'}
+                          </span>
+                          <input
+                            type="text"
+                            value={draft.coverageAreas}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, coverageAreas: e.target.value },
+                              }))
+                            }
+                            placeholder={lang === 'ar' ? 'مثال: حدة، بيت بوس، الأصبحي' : 'e.g. Hadda, Bait Baws'}
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-2 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'خط العرض (Lat)' : 'Center Lat'}</span>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            dir="ltr"
+                            value={draft.centerLat}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, centerLat: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white tabular-nums"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-2 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'خط الطول (Lng)' : 'Center Lng'}</span>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            dir="ltr"
+                            value={draft.centerLng}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, centerLng: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2.5 rounded-lg border border-[#E5DEC9] bg-white tabular-nums"
+                          />
+                        </label>
+
+                        <label className="lg:col-span-1 space-y-1 font-semibold">
+                          <span>{lang === 'ar' ? 'المدى (كم)' : 'Radius km'}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            step="0.5"
+                            dir="ltr"
+                            value={draft.radiusKm}
+                            onChange={(e) =>
+                              setZoneDrafts((prev) => ({
+                                ...prev,
+                                [zone.id]: { ...draft, radiusKm: e.target.value },
+                              }))
+                            }
+                            className="w-full min-h-[36px] px-2 rounded-lg border border-[#E5DEC9] bg-white tabular-nums"
+                          />
+                        </label>
+
+                        <div className="sm:col-span-2 lg:col-span-2 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const latNum = draft.centerLat.trim() ? Number(draft.centerLat) : undefined;
+                              const lngNum = draft.centerLng.trim() ? Number(draft.centerLng) : undefined;
+                              const radNum = draft.radiusKm.trim() ? Number(draft.radiusKm) : undefined;
+                              updateDomesticZone(zone.id, {
+                                group: draft.group,
+                                name: { ar: draft.nameAr.trim(), en: draft.nameEn.trim() || draft.nameAr.trim() },
+                                description: { ar: draft.descAr.trim(), en: draft.descEn.trim() },
+                                coverageAreas: draft.coverageAreas.trim() || undefined,
+                                centerLat: latNum !== undefined && Number.isFinite(latNum) ? latNum : undefined,
+                                centerLng: lngNum !== undefined && Number.isFinite(lngNum) ? lngNum : undefined,
+                                radiusKm:
+                                  radNum !== undefined && Number.isFinite(radNum) && radNum > 0
+                                    ? radNum
+                                    : undefined,
+                                fee: Math.max(0, draft.fee),
+                                active: draft.active,
+                              });
+                            }}
+                            className="flex-1 min-h-[36px] px-3 rounded-lg bg-[#4D7C0F] text-white font-semibold inline-flex items-center justify-center gap-1"
+                          >
+                            <Save className="w-3.5 h-3.5" />
+                            <span>{lang === 'ar' ? 'حفظ' : 'Save'}</span>
+                          </button>
+                          {domesticZones.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => deleteDomesticZone(zone.id)}
+                              aria-label={lang === 'ar' ? 'حذف النطاق' : 'Delete zone'}
+                              className="min-h-[36px] px-2.5 rounded-lg bg-white border border-[#E5DEC9] hover:border-red-300 text-red-600"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {/* Add Custom Geographic Zone Form */}
             <form
               onSubmit={handleAddZone}
-              className="p-4 rounded-2xl bg-amber-50/60 border border-[#E5DEC9] grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end text-xs"
+              className="p-4 rounded-2xl bg-amber-50/60 border border-[#E5DEC9] space-y-3 text-xs"
             >
-              <input
-                type="text"
-                required
-                value={newZoneNameAr}
-                onChange={(e) => setNewZoneNameAr(e.target.value)}
-                placeholder={lang === 'ar' ? 'منطقة توصيل جديدة (عربي) *' : 'New Zone (AR) *'}
-                className="sm:col-span-3 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
-              />
-              <input
-                type="text"
-                value={newZoneNameEn}
-                onChange={(e) => setNewZoneNameEn(e.target.value)}
-                placeholder={lang === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}
-                className="sm:col-span-3 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
-              />
-              <input
-                type="text"
-                value={newZoneDescAr}
-                onChange={(e) => setNewZoneDescAr(e.target.value)}
-                placeholder={lang === 'ar' ? 'الوصف (مثال: توصيل خلال ٢٤ ساعة)' : 'Description'}
-                className="sm:col-span-3 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
-              />
-              <input
-                type="number"
-                min={0}
-                value={newZoneFee}
-                onChange={(e) => setNewZoneFee(Number(e.target.value))}
-                className="sm:col-span-1 min-h-[38px] px-2 rounded-xl border border-[#E5DEC9] bg-white tabular-nums"
-              />
-              <button
-                type="submit"
-                className="sm:col-span-2 min-h-[38px] px-3 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-semibold"
-              >
-                {lang === 'ar' ? '+ إضافة منطقة' : '+ Add Zone'}
-              </button>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-bold text-sm text-[#1F2937]">
+                  {lang === 'ar'
+                    ? '+ إضافة نطاق جغرافي مخصص جديد (داخل أو خارج صنعاء)'
+                    : '+ Add Custom Geographic Zone'}
+                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] text-[#1F2937]/65">
+                    {lang === 'ar' ? 'تعبئة سريعة:' : 'Presets:'}
+                  </span>
+                  {[
+                    {
+                      labelAr: 'وسط صنعاء',
+                      labelEn: "Central Sana'a",
+                      group: 'inside_sanaa' as DomesticZoneGroup,
+                      lat: '15.3547',
+                      lng: '44.2066',
+                      rad: '5',
+                    },
+                    {
+                      labelAr: 'حدة / جنوب صنعاء',
+                      labelEn: 'Hadda South',
+                      group: 'inside_sanaa' as DomesticZoneGroup,
+                      lat: '15.3025',
+                      lng: '44.1985',
+                      rad: '7',
+                    },
+                    {
+                      labelAr: 'شمال صنعاء',
+                      labelEn: "North Sana'a",
+                      group: 'inside_sanaa' as DomesticZoneGroup,
+                      lat: '15.4050',
+                      lng: '44.2080',
+                      rad: '9',
+                    },
+                    {
+                      labelAr: 'عدن',
+                      labelEn: 'Aden',
+                      group: 'outside_sanaa' as DomesticZoneGroup,
+                      lat: '12.7855',
+                      lng: '45.0187',
+                      rad: '60',
+                    },
+                    {
+                      labelAr: 'دوعن / حضرموت',
+                      labelEn: 'Doan / Hadhramaut',
+                      group: 'outside_sanaa' as DomesticZoneGroup,
+                      lat: '15.4650',
+                      lng: '48.3200',
+                      rad: '120',
+                    },
+                  ].map((preset) => (
+                    <button
+                      key={preset.labelEn}
+                      type="button"
+                      onClick={() => {
+                        setNewZoneGroup(preset.group);
+                        setNewZoneLat(preset.lat);
+                        setNewZoneLng(preset.lng);
+                        setNewZoneRadius(preset.rad);
+                      }}
+                      className="px-2 py-1 rounded-lg bg-white border border-[#E5DEC9] hover:border-[#D97706] text-[11px] font-semibold"
+                    >
+                      {lang === 'ar' ? preset.labelAr : preset.labelEn}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
+                <label className="lg:col-span-2 space-y-1 font-semibold">
+                  <span>{lang === 'ar' ? 'النطاق' : 'Scope'}</span>
+                  <select
+                    value={newZoneGroup}
+                    onChange={(e) => setNewZoneGroup(e.target.value as DomesticZoneGroup)}
+                    className="w-full min-h-[38px] px-2.5 rounded-xl border border-[#E5DEC9] bg-white"
+                  >
+                    <option value="inside_sanaa">
+                      {lang === 'ar' ? 'داخل صنعاء' : "Inside Sana'a"}
+                    </option>
+                    <option value="outside_sanaa">
+                      {lang === 'ar' ? 'خارج صنعاء' : "Outside Sana'a"}
+                    </option>
+                  </select>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newZoneNameAr}
+                  onChange={(e) => setNewZoneNameAr(e.target.value)}
+                  placeholder={lang === 'ar' ? 'اسم النطاق / المنطقة (عربي) *' : 'Zone Name (AR) *'}
+                  className="lg:col-span-3 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
+                />
+                <input
+                  type="text"
+                  value={newZoneNameEn}
+                  onChange={(e) => setNewZoneNameEn(e.target.value)}
+                  placeholder={lang === 'ar' ? 'الاسم (إنجليزي)' : 'Name (EN)'}
+                  className="lg:col-span-3 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
+                />
+                <input
+                  type="text"
+                  value={newZoneDescAr}
+                  onChange={(e) => setNewZoneDescAr(e.target.value)}
+                  placeholder={lang === 'ar' ? 'مدة / وصف التوصيل' : 'Delivery info'}
+                  className="lg:col-span-2 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
+                />
+                <label className="lg:col-span-2 space-y-1 font-semibold">
+                  <span>{lang === 'ar' ? 'الرسوم (ر.ي)' : 'Fee (YER)'}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newZoneFee}
+                    onChange={(e) => setNewZoneFee(Number(e.target.value))}
+                    className="w-full min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white tabular-nums font-bold text-[#D97706]"
+                  />
+                </label>
+                <input
+                  type="text"
+                  value={newZoneCoverage}
+                  onChange={(e) => setNewZoneCoverage(e.target.value)}
+                  placeholder={
+                    lang === 'ar'
+                      ? 'الأحياء أو المدن المشمولة (مثال: سعوان، عصر، شملان)'
+                      : 'Covered neighborhoods / cities (comma-separated)'
+                  }
+                  className="sm:col-span-2 lg:col-span-5 min-h-[38px] px-3 rounded-xl border border-[#E5DEC9] bg-white"
+                />
+                <input
+                  type="number"
+                  step="0.0001"
+                  dir="ltr"
+                  value={newZoneLat}
+                  onChange={(e) => setNewZoneLat(e.target.value)}
+                  placeholder="Lat"
+                  className="lg:col-span-2 min-h-[38px] px-2.5 rounded-xl border border-[#E5DEC9] bg-white tabular-nums"
+                />
+                <input
+                  type="number"
+                  step="0.0001"
+                  dir="ltr"
+                  value={newZoneLng}
+                  onChange={(e) => setNewZoneLng(e.target.value)}
+                  placeholder="Lng"
+                  className="lg:col-span-2 min-h-[38px] px-2.5 rounded-xl border border-[#E5DEC9] bg-white tabular-nums"
+                />
+                <input
+                  type="number"
+                  min={0}
+                  step="0.5"
+                  dir="ltr"
+                  value={newZoneRadius}
+                  onChange={(e) => setNewZoneRadius(e.target.value)}
+                  placeholder={lang === 'ar' ? 'نصف القطر كم' : 'Radius km'}
+                  className="lg:col-span-1 min-h-[38px] px-2 rounded-xl border border-[#E5DEC9] bg-white tabular-nums"
+                />
+                <button
+                  type="submit"
+                  className="sm:col-span-2 lg:col-span-2 min-h-[38px] px-3 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-semibold"
+                >
+                  {lang === 'ar' ? '+ إضافة النطاق' : '+ Add Zone'}
+                </button>
+              </div>
             </form>
           </div>
 

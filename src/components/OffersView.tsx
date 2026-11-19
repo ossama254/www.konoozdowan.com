@@ -56,13 +56,13 @@ export const OffersView: React.FC = () => {
   return (
     <div className="space-y-8 pb-12">
       {/* Editorial Offers Header */}
-      <section className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E5DEC9] flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <section className="p-4 sm:p-8 rounded-3xl bg-white border border-[#E5DEC9] flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6">
         <div className="space-y-2 max-w-2xl">
           <div className="text-xs font-semibold text-[#D97706] inline-flex items-center gap-1.5">
             <Flame className="w-4 h-4" />
             <span>{lang === 'ar' ? 'العروض الموسمية والخصومات المباشرة' : 'Seasonal Harvest Deals'}</span>
           </div>
-          <h1 className="font-display-serif text-2xl sm:text-3xl font-bold text-[#1F2937] text-balance">
+          <h1 className="font-display-serif text-xl sm:text-3xl font-bold text-[#1F2937] text-balance">
             {lang === 'ar'
               ? 'عروض كنوز دوعن الحصرية لهذا الموسم'
               : 'Exclusive Kunooz Doan Seasonal Offers'}
@@ -74,28 +74,28 @@ export const OffersView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-6 shrink-0 border-t md:border-t-0 pt-4 md:pt-0 border-[#E5DEC9]">
+        <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:gap-6 shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0 border-[#E5DEC9] text-center sm:text-start">
           <div>
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'عروض خاصة' : 'Special Deals'}
             </div>
-            <div className="text-2xl font-bold text-[#D97706] tabular-nums">{activeOffers.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#D97706] tabular-nums">{activeOffers.length}</div>
           </div>
-          <div className="h-10 w-px bg-[#E5DEC9]" />
+          <div className="hidden sm:block h-10 w-px bg-[#E5DEC9]" />
           <div>
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'منتجات مخفضة' : 'On Sale'}
             </div>
-            <div className="text-2xl font-bold text-[#4D7C0F] tabular-nums">
+            <div className="text-xl sm:text-2xl font-bold text-[#4D7C0F] tabular-nums">
               {discountedProducts.length}
             </div>
           </div>
-          <div className="h-10 w-px bg-[#E5DEC9]" />
+          <div className="hidden sm:block h-10 w-px bg-[#E5DEC9]" />
           <div>
-            <div className="text-xs text-[#1F2937]/60">
+            <div className="text-[11px] sm:text-xs text-[#1F2937]/60">
               {lang === 'ar' ? 'كوبونات فعالة' : 'Active Codes'}
             </div>
-            <div className="text-2xl font-bold text-[#1F2937] tabular-nums">{activePromos.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#1F2937] tabular-nums">{activePromos.length}</div>
           </div>
         </div>
       </section>

@@ -65,6 +65,7 @@ export const CheckoutView: React.FC = () => {
     domesticZones,
     domesticZone,
     setDomesticZone,
+    matchDomesticZoneByLocation,
     freeShippingThreshold,
     internationalCountries,
     internationalCountry,
@@ -106,6 +107,19 @@ export const CheckoutView: React.FC = () => {
 
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [geoAutoMatchInfo, setGeoAutoMatchInfo] = useState<string | null>(null);
+
+  const activeDomesticZones = domesticZones.filter((z) => z.active !== false);
+  const resolvedDomesticZones =
+    activeDomesticZones.length > 0 ? activeDomesticZones : domesticZones;
+  const insideSanaaZones = resolvedDomesticZones.filter(
+    (z) => (z.group ?? 'inside_sanaa') === 'inside_sanaa'
+  );
+  const outsideSanaaZones = resolvedDomesticZones.filter(
+    (z) => z.group === 'outside_sanaa'
+  );
+  const selectedDomesticZoneObj =
+    resolvedDomesticZones.find((z) => z.id === domesticZone) ?? resolvedDomesticZones[0];
 
   const selectedCountryObj =
     internationalCountries.find((c) => c.id === internationalCountry) ?? internationalCountries[0];
@@ -594,66 +608,182 @@ export const CheckoutView: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-[#FFFBEB] border border-[#E5DEC9] space-y-3">
+                <div className="p-4 rounded-2xl bg-[#FFFBEB] border border-[#E5DEC9] space-y-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="font-bold text-[#1F2937]">
-                      {lang === 'ar' ? 'اختر نطاق التوصيل المحلي:' : 'Select Domestic Delivery Zone:'}
+                      {lang === 'ar'
+                        ? 'اختر النطاق الجغرافي للتوصيل المحلي:'
+                        : 'Select Geographic Delivery Zone:'}
                     </span>
-                    <span className="font-semibold text-[#4D7C0F] tabular-nums">
-                      {subtotal >= freeShippingThreshold
-                        ? lang === 'ar'
-                          ? 'مؤهل للتوصيل المجاني'
-                          : 'Free Delivery Unlocked'
-                        : lang === 'ar'
-                        ? `مجاني للطلبات فوق ${formatPrice(freeShippingThreshold)}`
-                        : `Free over ${formatPrice(freeShippingThreshold)}`}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const match = matchDomesticZoneByLocation(
+                            coords.lat,
+                            coords.lng,
+                            `${city} ${streetAddress}`
+                          );
+                          if (match) {
+                            setDomesticZone(match.zone.id);
+                            setGeoAutoMatchInfo(
+                              lang === 'ar'
+                                ? `تم تحديد النطاق تلقائياً: ${match.zone.name.ar} (${formatPrice(match.zone.fee)})`
+                                : `Auto-matched zone: ${match.zone.name.en} (${formatPrice(match.zone.fee)})`
+                            );
+                          } else {
+                            setGeoAutoMatchInfo(
+                              lang === 'ar'
+                                ? 'لم يتم العثور على نطاق مطابق تماماً — يرجى الاختيار من القائمة.'
+                                : 'No exact geo match found — please pick a zone below.'
+                            );
+                          }
+                        }}
+                        className="min-h-[30px] px-2.5 rounded-lg bg-white border border-[#D97706]/40 text-[#D97706] hover:bg-amber-50 font-semibold text-[11px]"
+                      >
+                        {lang === 'ar' ? 'تحديد النطاق تلقائياً من الموقع' : 'Auto-Detect Zone'}
+                      </button>
+                      <span className="font-semibold text-[#4D7C0F] tabular-nums">
+                        {subtotal >= freeShippingThreshold
+                          ? lang === 'ar'
+                            ? 'مؤهل للتوصيل المجاني'
+                            : 'Free Delivery Unlocked'
+                          : lang === 'ar'
+                          ? `مجاني للطلبات فوق ${formatPrice(freeShippingThreshold)}`
+                          : `Free over ${formatPrice(freeShippingThreshold)}`}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {domesticZones.map((zone) => {
-                      const active = domesticZone === zone.id;
-                      return (
-                        <button
-                          key={zone.id}
-                          type="button"
-                          onClick={() => {
-                            setDomesticZone(zone.id);
-                            if (zone.id === 'inside_sanaa' && !city.trim()) {
-                              setCity(lang === 'ar' ? 'صنعاء' : 'Sanaa');
-                            } else if (
-                              zone.id === 'outside_sanaa' &&
-                              (city === 'صنعاء' || city === 'Sanaa')
-                            ) {
-                              setCity('');
-                            }
-                          }}
-                          aria-pressed={active}
-                          className={`p-3 rounded-xl border text-start flex items-center justify-between gap-2 transition-all ${
-                            active
-                              ? 'border-[#D97706] bg-white shadow-sm ring-1 ring-[#D97706]/30'
-                              : 'border-[#E5DEC9] bg-white/75 hover:border-[#D97706]/50'
-                          }`}
-                        >
-                          <div>
-                            <div className="text-xs sm:text-sm font-bold text-[#1F2937]">
-                              {t(zone.name)}
-                            </div>
-                            <div className="text-[11px] text-[#1F2937]/60">
-                              {t(zone.description)}
-                            </div>
-                          </div>
-                          <span className="text-xs sm:text-sm font-bold text-[#D97706] tabular-nums shrink-0">
-                            {subtotal >= freeShippingThreshold
-                              ? lang === 'ar'
-                                ? 'مجاني'
-                                : 'Free'
-                              : formatPrice(zone.fee)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {geoAutoMatchInfo && (
+                    <div className="p-2.5 rounded-xl bg-lime-50 border border-[#4D7C0F]/30 text-[11px] font-semibold text-[#4D7C0F]">
+                      {geoAutoMatchInfo}
+                    </div>
+                  )}
+
+                  {insideSanaaZones.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[11px] font-bold text-[#92400E]">
+                        {lang === 'ar'
+                          ? `نطاقات داخل صنعاء (${insideSanaaZones.length})`
+                          : `Inside Sana'a Zones (${insideSanaaZones.length})`}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {insideSanaaZones.map((zone) => {
+                          const active = domesticZone === zone.id;
+                          return (
+                            <button
+                              key={zone.id}
+                              type="button"
+                              onClick={() => {
+                                setDomesticZone(zone.id);
+                                setGeoAutoMatchInfo(null);
+                                if (!city.trim()) {
+                                  setCity(lang === 'ar' ? 'صنعاء' : 'Sanaa');
+                                }
+                              }}
+                              aria-pressed={active}
+                              className={`p-3 rounded-xl border text-start flex items-start justify-between gap-2 transition-all ${
+                                active
+                                  ? 'border-[#D97706] bg-white shadow-sm ring-1 ring-[#D97706]/30'
+                                  : 'border-[#E5DEC9] bg-white/75 hover:border-[#D97706]/50'
+                              }`}
+                            >
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="text-xs sm:text-sm font-bold text-[#1F2937]">
+                                  {t(zone.name)}
+                                </div>
+                                <div className="text-[11px] text-[#1F2937]/65">
+                                  {t(zone.description)}
+                                </div>
+                                {zone.coverageAreas && (
+                                  <div className="text-[10px] text-[#4D7C0F] line-clamp-2">
+                                    {zone.coverageAreas}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-end shrink-0 space-y-0.5">
+                                <div className="text-xs sm:text-sm font-bold text-[#D97706] tabular-nums">
+                                  {subtotal >= freeShippingThreshold
+                                    ? lang === 'ar'
+                                      ? 'مجاني'
+                                      : 'Free'
+                                    : formatPrice(zone.fee)}
+                                </div>
+                                {zone.radiusKm ? (
+                                  <div className="text-[10px] text-[#1F2937]/50 tabular-nums">
+                                    {zone.radiusKm} {lang === 'ar' ? 'كم' : 'km'}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {outsideSanaaZones.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[11px] font-bold text-[#92400E]">
+                        {lang === 'ar'
+                          ? `نطاقات خارج صنعاء والمحافظات (${outsideSanaaZones.length})`
+                          : `Outside Sana'a & Governorates (${outsideSanaaZones.length})`}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {outsideSanaaZones.map((zone) => {
+                          const active = domesticZone === zone.id;
+                          return (
+                            <button
+                              key={zone.id}
+                              type="button"
+                              onClick={() => {
+                                setDomesticZone(zone.id);
+                                setGeoAutoMatchInfo(null);
+                                if (city === 'صنعاء' || city === 'Sanaa') {
+                                  setCity('');
+                                }
+                              }}
+                              aria-pressed={active}
+                              className={`p-3 rounded-xl border text-start flex items-start justify-between gap-2 transition-all ${
+                                active
+                                  ? 'border-[#D97706] bg-white shadow-sm ring-1 ring-[#D97706]/30'
+                                  : 'border-[#E5DEC9] bg-white/75 hover:border-[#D97706]/50'
+                              }`}
+                            >
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="text-xs sm:text-sm font-bold text-[#1F2937]">
+                                  {t(zone.name)}
+                                </div>
+                                <div className="text-[11px] text-[#1F2937]/65">
+                                  {t(zone.description)}
+                                </div>
+                                {zone.coverageAreas && (
+                                  <div className="text-[10px] text-[#4D7C0F] line-clamp-2">
+                                    {zone.coverageAreas}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-end shrink-0 space-y-0.5">
+                                <div className="text-xs sm:text-sm font-bold text-[#D97706] tabular-nums">
+                                  {subtotal >= freeShippingThreshold
+                                    ? lang === 'ar'
+                                      ? 'مجاني'
+                                      : 'Free'
+                                    : formatPrice(zone.fee)}
+                                </div>
+                                {zone.radiusKm ? (
+                                  <div className="text-[10px] text-[#1F2937]/50 tabular-nums">
+                                    {zone.radiusKm} {lang === 'ar' ? 'كم' : 'km'}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <GoogleMapsAddressPicker
@@ -663,6 +793,23 @@ export const CheckoutView: React.FC = () => {
                     setCoords({ lat: sel.lat, lng: sel.lng });
                     if (sel.formattedAddress) setStreetAddress(sel.formattedAddress);
                     if (sel.placeId) setPlaceId(sel.placeId);
+                    const match = matchDomesticZoneByLocation(
+                      sel.lat,
+                      sel.lng,
+                      `${city} ${sel.formattedAddress ?? ''}`
+                    );
+                    if (match) {
+                      setDomesticZone(match.zone.id);
+                      setGeoAutoMatchInfo(
+                        lang === 'ar'
+                          ? `تم مطابقة النطاق تلقائياً: ${match.zone.name.ar} — ${formatPrice(match.zone.fee)}${
+                              match.distanceKm !== undefined ? ` (يبعد ${match.distanceKm} كم عن مركز النطاق)` : ''
+                            }`
+                          : `Auto-matched zone: ${match.zone.name.en} — ${formatPrice(match.zone.fee)}${
+                              match.distanceKm !== undefined ? ` (${match.distanceKm} km from center)` : ''
+                            }`
+                      );
+                    }
                   }}
                 />
               </div>
@@ -1063,8 +1210,8 @@ export const CheckoutView: React.FC = () => {
                     ? `الشحن الدولي (${t(resolvedCountryName)})`
                     : `International (${t(resolvedCountryName)})`
                   : lang === 'ar'
-                  ? `التوصيل المحلي (${domesticZone === 'inside_sanaa' ? 'داخل صنعاء' : 'خارج صنعاء'})`
-                  : `Domestic (${domesticZone === 'inside_sanaa' ? "Inside Sana'a" : "Outside Sana'a"})`}
+                  ? `التوصيل المحلي (${selectedDomesticZoneObj ? t(selectedDomesticZoneObj.name) : 'داخل صنعاء'})`
+                  : `Domestic (${selectedDomesticZoneObj ? t(selectedDomesticZoneObj.name) : "Inside Sana'a"})`}
               </span>
               <span className="tabular-nums">
                 {shippingFee === 0

@@ -83,7 +83,7 @@ export const PushNotificationBell: React.FC = () => {
         onClick={() => setIsOpen(true)}
         aria-label={lang === 'ar' ? 'مركز الإشعارات' : 'Notifications Center'}
         title={lang === 'ar' ? 'الإشعارات والتنبيهات' : 'Push Notifications'}
-        className="relative min-h-[40px] min-w-[40px] md:min-h-[42px] md:min-w-[42px] px-2.5 rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-[#1F2937] inline-flex items-center justify-center transition-colors shrink-0"
+        className="relative min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] rounded-xl border border-[#E5DEC9] bg-white hover:border-[#D97706] text-[#1F2937] inline-flex items-center justify-center transition-colors shrink-0"
       >
         <Bell className="w-4 h-4 text-[#D97706]" />
         {unreadNotificationCount > 0 && (

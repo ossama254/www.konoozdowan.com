@@ -190,6 +190,11 @@ interface StoreContextValue {
   addDomesticZone: (zone: DomesticShippingZone) => void;
   updateDomesticZone: (id: string, partial: Partial<Omit<DomesticShippingZone, 'id'>>) => void;
   deleteDomesticZone: (id: string) => void;
+  matchDomesticZoneByLocation: (
+    lat?: number,
+    lng?: number,
+    locationText?: string
+  ) => { zone: DomesticShippingZone; matchedBy: 'geo' | 'keyword'; distanceKm?: number } | null;
   domesticZone: DomesticDeliveryZone;
   setDomesticZone: (zone: DomesticDeliveryZone) => void;
   insideSanaaFee: number;
@@ -411,7 +416,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = window.localStorage.getItem(DOMESTIC_ZONES_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((z: DomesticShippingZone) => ({
+            ...z,
+            group:
+              z.group ??
+              (z.id.includes('outside') ? 'outside_sanaa' : 'inside_sanaa'),
+            active: z.active ?? true,
+          }));
+        }
       }
     } catch {
       // Ignore storage read error
@@ -1306,11 +1319,95 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [appliedPromo, appliedVoucher, subtotal]);
 
   const insideSanaaFee = useMemo(
-    () => domesticZones.find((z) => z.id === 'inside_sanaa')?.fee ?? domesticZones[0]?.fee ?? 1000,
+    () =>
+      domesticZones.find((z) => z.active !== false && (z.group ?? 'inside_sanaa') === 'inside_sanaa')
+        ?.fee ??
+      domesticZones[0]?.fee ??
+      1000,
     [domesticZones]
   );
   const outsideSanaaFee = useMemo(
-    () => domesticZones.find((z) => z.id === 'outside_sanaa')?.fee ?? domesticZones[1]?.fee ?? 3000,
+    () =>
+      domesticZones.find((z) => z.active !== false && z.group === 'outside_sanaa')?.fee ??
+      domesticZones[1]?.fee ??
+      3000,
+    [domesticZones]
+  );
+
+  const matchDomesticZoneByLocation = useCallback(
+    (
+      lat?: number,
+      lng?: number,
+      locationText?: string
+    ): { zone: DomesticShippingZone; matchedBy: 'geo' | 'keyword'; distanceKm?: number } | null => {
+      const activeZones = domesticZones.filter((z) => z.active !== false);
+      if (activeZones.length === 0) return null;
+
+      // 1) Try text/keyword match on coverageAreas or zone name first if user typed a neighborhood/city
+      const cleanText = (locationText ?? '').trim().toLowerCase();
+      if (cleanText.length >= 2) {
+        for (const zone of activeZones) {
+          const keywords = (zone.coverageAreas ?? '')
+            .split(/[,،\n]+/)
+            .map((k) => k.trim().toLowerCase())
+            .filter((k) => k.length >= 2);
+          if (
+            keywords.some((kw) => cleanText.includes(kw)) ||
+            cleanText.includes(zone.name.ar.toLowerCase()) ||
+            cleanText.includes(zone.name.en.toLowerCase())
+          ) {
+            return { zone, matchedBy: 'keyword' };
+          }
+        }
+      }
+
+      // 2) Try geographic Haversine distance against zones that have coordinates & radiusKm
+      if (
+        typeof lat === 'number' &&
+        typeof lng === 'number' &&
+        Number.isFinite(lat) &&
+        Number.isFinite(lng)
+      ) {
+        const toRad = (deg: number) => (deg * Math.PI) / 180;
+        const calcKm = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+          const dLat = toRad(lat2 - lat1);
+          const dLng = toRad(lng2 - lng1);
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) *
+              Math.cos(toRad(lat2)) *
+              Math.sin(dLng / 2) *
+              Math.sin(dLng / 2);
+          return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        const geoMatches: { zone: DomesticShippingZone; dist: number; radius: number }[] = [];
+        for (const zone of activeZones) {
+          if (
+            typeof zone.centerLat === 'number' &&
+            typeof zone.centerLng === 'number' &&
+            typeof zone.radiusKm === 'number' &&
+            zone.radiusKm > 0
+          ) {
+            const dist = calcKm(lat, lng, zone.centerLat, zone.centerLng);
+            if (dist <= zone.radiusKm) {
+              geoMatches.push({ zone, dist, radius: zone.radiusKm });
+            }
+          }
+        }
+        if (geoMatches.length > 0) {
+          // Prefer most specific (smallest radius), then nearest center
+          geoMatches.sort((a, b) => a.radius - b.radius || a.dist - b.dist);
+          return {
+            zone: geoMatches[0].zone,
+            matchedBy: 'geo',
+            distanceKm: Number(geoMatches[0].dist.toFixed(1)),
+          };
+        }
+      }
+
+      return null;
+    },
     [domesticZones]
   );
 
@@ -2512,6 +2609,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addDomesticZone,
     updateDomesticZone,
     deleteDomesticZone,
+    matchDomesticZoneByLocation,
     domesticZone,
     setDomesticZone,
     insideSanaaFee,

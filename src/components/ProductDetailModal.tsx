@@ -91,18 +91,18 @@ export const ProductDetailModal: React.FC = () => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-4xl bg-[#FFFBEB] border border-[#E5DEC9] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        className="w-full max-w-4xl bg-[#FFFBEB] border border-[#E5DEC9] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col"
       >
         {/* Top Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5DEC9] bg-white">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#E5DEC9] bg-white shrink-0">
           <div className="text-xs font-medium text-[#4D7C0F] truncate tabular-nums">
             {t(selectedProduct.subCategory)} · {t(selectedProduct.origin)} · {t(selectedProduct.harvestSeason)} · {selectedProduct.sku}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => toggleWishlist(selectedProduct.id)}
-              className="min-h-[44px] min-w-[44px] rounded-xl border border-[#E5DEC9] flex items-center justify-center hover:bg-amber-50 transition-colors"
+              className="min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-xl border border-[#E5DEC9] flex items-center justify-center hover:bg-amber-50 transition-colors"
               aria-label={lang === 'ar' ? 'المفضلة' : 'Wishlist'}
             >
               <Heart
@@ -112,7 +112,7 @@ export const ProductDetailModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setSelectedProduct(null)}
-              className="min-h-[44px] min-w-[44px] rounded-xl border border-[#E5DEC9] flex items-center justify-center hover:bg-amber-50 transition-colors"
+              className="min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-xl border border-[#E5DEC9] flex items-center justify-center hover:bg-amber-50 transition-colors"
               aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}
             >
               <X className="w-5 h-5 text-[#1F2937]" />
@@ -121,7 +121,7 @@ export const ProductDetailModal: React.FC = () => {
         </div>
 
         {/* Scrollable Body */}
-        <div className="overflow-y-auto p-5 sm:p-7 space-y-8">
+        <div className="overflow-y-auto p-4 sm:p-7 space-y-6 sm:space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
             {/* Gallery with Interactive Zoom */}
             <div className="lg:col-span-6 space-y-3">
@@ -158,7 +158,7 @@ export const ProductDetailModal: React.FC = () => {
               </div>
 
               {selectedProduct.images.length > 1 && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-1">
                   {selectedProduct.images.map((img, idx) => (
                     <button
                       key={img + idx}
@@ -167,7 +167,7 @@ export const ProductDetailModal: React.FC = () => {
                         setActiveImageIdx(idx);
                         setIsZoomed(false);
                       }}
-                      className={`w-20 h-16 rounded-xl overflow-hidden border-2 transition-colors ${
+                      className={`w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden border-2 shrink-0 transition-colors ${
                         activeImageIdx === idx ? 'border-[#D97706]' : 'border-[#E5DEC9] opacity-70'
                       }`}
                     >

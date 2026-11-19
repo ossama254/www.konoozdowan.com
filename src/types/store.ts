@@ -105,11 +105,19 @@ export type ShippingScope = 'domestic' | 'international';
 
 export type DomesticDeliveryZone = string;
 
+export type DomesticZoneGroup = 'inside_sanaa' | 'outside_sanaa';
+
 export interface DomesticShippingZone {
   id: DomesticDeliveryZone;
+  group?: DomesticZoneGroup;
   name: LocalizedText;
   description: LocalizedText;
+  coverageAreas?: string;
+  centerLat?: number;
+  centerLng?: number;
+  radiusKm?: number;
   fee: number;
+  active?: boolean;
 }
 
 export type InternationalCountryId = string;

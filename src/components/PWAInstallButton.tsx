@@ -39,7 +39,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'c
           onClick={handleAction}
           aria-label={lang === 'ar' ? 'تثبيت تطبيق أندرويد' : 'Install Android App'}
           title={lang === 'ar' ? 'تثبيت كتطبيق أندرويد' : 'Install as Android App'}
-          className="min-h-[40px] min-w-[40px] md:min-h-[42px] md:min-w-[42px] rounded-xl border border-[#D97706]/40 bg-amber-50 hover:bg-amber-100/80 inline-flex items-center justify-center transition-colors shrink-0"
+          className="min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] rounded-xl border border-[#D97706]/40 bg-amber-50 hover:bg-amber-100/80 inline-flex items-center justify-center transition-colors shrink-0"
         >
           <Smartphone className="w-4 h-4 text-[#D97706]" />
         </button>
