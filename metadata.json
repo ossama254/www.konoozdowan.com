@@ -1,0 +1,10 @@
+{
+  "name": "كنوز دوعن",
+  "description": "Artisanal mobile-first e-commerce storefront for pure natural Sidr & Sumra honey, sun-dried Razqi & black raisins, and organic heritage almonds with loyalty rewards and Google Maps delivery.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

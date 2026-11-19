@@ -1,0 +1,13 @@
+{
+  "appId": "com.kunoozdoan.store",
+  "appName": "كنوز دوعن",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#FFFBEB",
+    "allowMixedContent": false
+  }
+}
